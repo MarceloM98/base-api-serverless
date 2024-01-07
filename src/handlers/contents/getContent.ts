@@ -1,9 +1,9 @@
 import { contentService } from "./contentService";
 
-const getClasses = async ({ query, user }) => {
-  const search = query;
-  const classes = await contentService.list(search, user);
-  return { classes };
+const getContent = async ({ query }) => {
+  const { search, apiKey, page } = query;
+  const response = await contentService.list(apiKey, search, page);
+  return response;
 };
 
-export { getClasses };
+export { getContent };
