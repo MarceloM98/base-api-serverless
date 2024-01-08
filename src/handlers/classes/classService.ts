@@ -18,7 +18,16 @@ const create = async (data: IClass, user: IUser) => {
   return newClass;
 };
 
-const list = async ({ title = null, description = null, video = 1 }, user) => {
+const list = async (
+  {
+    title = null,
+    description = null,
+    video = 0,
+    progress = null,
+    performance = null,
+  },
+  user
+) => {
   let query = {};
   if (title) {
     query["title"] = new RegExp(title, "i");
@@ -26,7 +35,49 @@ const list = async ({ title = null, description = null, video = 1 }, user) => {
   if (description) {
     query["description"] = new RegExp(description, "i");
   }
-  const classes = await NewClass.find(query);
+  if (video == 1) {
+    query["video"] = { $exists: true };
+  }
+
+  if (progress) {
+    query["progress"] = progress == 1 ? { $eq: 100 } : { $lt: 100 };
+  }
+
+  if (performance) {
+    query["performance"] = { $lte: parseInt(performance) };
+  }
+
+  const classes = NewClass.aggregate([
+    {
+      $lookup: {
+        from: Indicator.collection.name,
+        let: { id: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$id", "$class_id"] },
+                  { $eq: [user._id, "$user_id"] },
+                ],
+              },
+            },
+          },
+          { $unset: "class_id" },
+        ],
+        as: "fromIndicators",
+      },
+    },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $mergeObjects: [{ $arrayElemAt: ["$fromIndicators", 0] }, "$$ROOT"],
+        },
+      },
+    },
+    { $project: { fromIndicators: 0 } },
+    { $match: query },
+  ]);
 
   await logService.create({
     user: user._id,
@@ -124,12 +175,35 @@ const updateProgress = async (
   return updatedIndicator;
 };
 
+const listIndicator = async ({ sort = null }) => {
+  let indicators = Indicator.aggregate([
+    {
+      $match: {
+        progress: 100,
+      },
+    },
+    {
+      $group: {
+        _id: "$class_id",
+        totalUsers: { $sum: 1 },
+        averagePerformance: { $avg: "$performance" },
+      },
+    },
+  ]);
+
+  if (sort) {
+    indicators = indicators.sort({ [sort]: -1 });
+  }
+  return await indicators;
+};
+
 const classService = {
   create,
   list,
   update,
   remove,
   updateProgress,
+  listIndicator,
 };
 
 export { classService };

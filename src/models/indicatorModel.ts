@@ -7,19 +7,19 @@ import { mongooseErrorValidator } from "@/lib/mongooseErrorValidator";
 const IndicatorSchema = new Schema(
   {
     class_id: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: [true, "class_id"],
     },
     user_id: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: [true, "user_id"],
     },
     progress: {
-      type: String,
+      type: Number,
       required: [true, "progress"],
     },
     performance: {
-      type: String,
+      type: Number,
       required: [true, "performance"],
     },
   },

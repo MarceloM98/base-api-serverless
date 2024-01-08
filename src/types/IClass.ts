@@ -3,7 +3,7 @@ interface IClass {
   title: string;
   description?: string;
   thumbnail?: string;
-  video: string;
+  video?: string;
   archive?: string;
   createdAt?: Date;
   updatedAt?: Date;

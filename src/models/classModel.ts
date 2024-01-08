@@ -18,7 +18,6 @@ const ClassSchema = new Schema(
     },
     video: {
       type: String,
-      required: [true, "thumbnail"],
     },
     archive: {
       type: String,
